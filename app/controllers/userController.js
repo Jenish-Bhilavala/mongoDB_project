@@ -95,7 +95,9 @@ module.exports = {
 
       console.log('id', id);
 
-      const findUser = await User.findOne({ _id: new ObjectId(id) });
+      const findUser = await User.findOne({ _id: new ObjectId(id) }).select(
+        '-password'
+      );
 
       if (!findUser) {
         logger.error(`User ${message.NOT_FOUND}`);
