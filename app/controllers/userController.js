@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const path = require('path');
 const User = require('../models/userModel');
 const HandleResponse = require('../services/errorHandler');
 const message = require('../utils/message');
@@ -9,6 +10,7 @@ const { logger } = require('../logger/logger');
 const {
   registerValidation,
   loginValidation,
+  updateUserValidation,
 } = require('../validations/userValidation');
 const { ObjectId } = require('mongodb');
 require('dotenv').config();
@@ -16,16 +18,11 @@ require('dotenv').config();
 module.exports = {
   registerUser: async (req, res) => {
     try {
-      const {
-        firstName,
-        lastName,
-        hobby,
-        gender,
-        email,
-        password,
-        phone,
-        image,
-      } = req.body;
+      const { firstName, lastName, hobby, gender, email, password, phone } =
+        req.body;
+      const image = req.file ? path.join(req.file.filename) : null;
+      console.log(req.file);
+
       const { error } = registerValidation.validate(req.body);
 
       if (error) {
@@ -76,7 +73,7 @@ module.exports = {
           response.SUCCESS,
           StatusCodes.CREATED,
           message.USER_REGISTERED,
-          { id: user.id },
+          { _id: user.id },
           undefined
         )
       );
@@ -96,9 +93,6 @@ module.exports = {
   viewUser: async (req, res) => {
     try {
       const { id } = req.params;
-
-      console.log('id', id);
-
       const findUser = await User.findOne({ _id: new ObjectId(id) }).select(
         '-password'
       );
@@ -174,6 +168,71 @@ module.exports = {
       logger.info('User login successfully.');
       return res.json(
         HandleResponse(response.SUCCESS, StatusCodes.OK, undefined, { token })
+      );
+    } catch (error) {
+      logger.error(error.message || error);
+      return res.json(
+        HandleResponse(
+          response.ERROR,
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          error.message || error,
+          undefined
+        )
+      );
+    }
+  },
+
+  updateUser: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { firstName, lastName, hobby, gender, email, phone } = req.body;
+      const { error } = updateUserValidation.validate(req.body);
+      console.log(req.body);
+
+      if (error) {
+        logger.error(error.details[0].message);
+        return res.json(
+          HandleResponse(
+            response.ERROR,
+            StatusCodes.BAD_REQUEST,
+            error.details[0].message,
+            undefined
+          )
+        );
+      }
+
+      const findUser = await User.findOne({ _id: new ObjectId(id) });
+
+      if (!findUser) {
+        logger.error(`User ${message.NOT_FOUND}`);
+        return res.json(
+          HandleResponse(
+            response.ERROR,
+            StatusCodes.NOT_FOUND,
+            `User ${message.NOT_FOUND}`,
+            undefined
+          )
+        );
+      }
+
+      const image = req.file ? path.join(req.file.filename) : findUser.image;
+      const updateUser = {
+        firstName,
+        lastName,
+        hobby,
+        gender,
+        email,
+        phone,
+        image,
+      };
+      await findUser.updateOne(
+        { _id: findUser._id },
+        { $set: { ...updateUser } }
+      );
+
+      logger.info(`User ${message.UPDATED}`);
+      return res.json(
+        HandleResponse(response.SUCCESS, StatusCodes.ACCEPTED, undefined)
       );
     } catch (error) {
       logger.error(error.message || error);

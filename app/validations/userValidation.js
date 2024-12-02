@@ -67,7 +67,44 @@ const loginValidation = Joi.object({
     }),
 });
 
+const updateUserValidation = Joi.object({
+  firstName: Joi.string().optional().messages({
+    'string.base': 'First name must be a string.',
+    'string.empty': 'First name cannot be empty.',
+  }),
+  lastName: Joi.string().optional().messages({
+    'string.base': 'Last name must be a string.',
+    'string.empty': 'Last name cannot be empty.',
+  }),
+  hobby: Joi.string().optional().messages({
+    'string.base': 'Hobby must be a string.',
+    'string.empty': 'Hobby cannot be empty.',
+  }),
+  gender: Joi.string()
+    .valid(gender.MALE, gender.FEMALE, gender.OTHER)
+    .optional()
+    .messages({
+      'string.base': 'Gender must be a string.',
+      'string.empty': 'Gender cannot be empty.',
+      'any.only': 'Gender must be male, female, or other.',
+    }),
+  email: Joi.string().email().optional().messages({
+    'string.base': 'Email must be a string.',
+    'string.empty': 'Email cannot be empty.',
+    'string.email': 'Email must be a valid email address.',
+  }),
+  password: Joi.forbidden().messages({
+    'any.unknown': 'Password cannot be updated.',
+  }),
+  phone: Joi.string().pattern(new RegExp('^[0-9]{10}$')).optional().messages({
+    'string.pattern.base': 'Phone must be exactly 10 digits.',
+    'string.empty': 'Phone cannot be empty.',
+  }),
+  image: Joi.string().optional(),
+});
+
 module.exports = {
   registerValidation,
   loginValidation,
+  updateUserValidation,
 };

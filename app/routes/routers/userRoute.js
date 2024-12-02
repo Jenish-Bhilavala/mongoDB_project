@@ -6,5 +6,6 @@ const userController = require('../../controllers/userController');
 router.post('/', upload.single('image'), userController.registerUser);
 router.get('/view/:id', userController.viewUser);
 router.post('/login', userController.loginUser);
+router.put('/update/:id', userController.updateUser);
 
 module.exports = router;

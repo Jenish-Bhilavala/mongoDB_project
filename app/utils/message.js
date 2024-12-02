@@ -9,4 +9,5 @@ module.exports = {
   // common message
   RETRIEVED_SUCCESS: 'retrieved successfully.',
   NOT_FOUND: 'not found.',
+  UPDATED: 'updated successfully.',
 };
