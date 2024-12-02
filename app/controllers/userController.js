@@ -1,16 +1,20 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const path = require('path');
+const moment = require('moment');
 const userModel = require('../models/userModel');
+const otpModel = require('../models/otpModel');
 const HandleResponse = require('../services/errorHandler');
 const message = require('../utils/message');
 const { StatusCodes } = require('http-status-codes');
 const { response } = require('../utils/enum');
 const { logger } = require('../logger/logger');
+const { sendMail, generateOTP } = require('../services/email');
 const {
   registerValidation,
   loginValidation,
   updateUserValidation,
+  verifyEmailValidation,
+  forgotPasswordValidation,
 } = require('../validations/userValidation');
 const { ObjectId } = require('mongodb');
 require('dotenv').config();
@@ -102,7 +106,8 @@ module.exports = {
           HandleResponse(
             response.ERROR,
             StatusCodes.NOT_FOUND,
-            `User ${message.NOT_FOUND}`
+            `User ${message.NOT_FOUND}`,
+            undefined
           )
         );
       }
@@ -141,12 +146,17 @@ module.exports = {
         );
       }
 
-      const findUser = await User.findOne({ email });
+      const findUser = await userModel.findOne({ email });
 
       if (!findUser) {
         logger.error(`User ${message.NOT_FOUND}`);
         return res.json(
-          HandleResponse(response.ERROR, StatusCodes.NOT_FOUND, undefined)
+          HandleResponse(
+            response.ERROR,
+            StatusCodes.NOT_FOUND,
+            `User ${message.NOT_FOUND}`,
+            undefined
+          )
         );
       }
 
@@ -155,7 +165,12 @@ module.exports = {
       if (!isPasswordMatch) {
         logger.error(message.INVALID_PASSWORD);
         return res.json(
-          HandleResponse(response.ERROR, StatusCodes.BAD_REQUEST, undefined)
+          HandleResponse(
+            response.ERROR,
+            StatusCodes.BAD_REQUEST,
+            message.INVALID_PASSWORD,
+            undefined
+          )
         );
       }
 
@@ -168,7 +183,7 @@ module.exports = {
         { expiresIn: process.env.JWT_EXPIRE_IN }
       );
 
-      logger.info('User login successfully.');
+      logger.info(message.LOGIN_SUCCESS);
       return res.json(
         HandleResponse(response.SUCCESS, StatusCodes.OK, undefined, { token })
       );
@@ -185,12 +200,11 @@ module.exports = {
     }
   },
 
-  updateUser: async (req, res) => {
+  updateProfile: async (req, res) => {
     try {
       const { id } = req.params;
       const { firstName, lastName, hobby, gender, email, phone } = req.body;
       const { error } = updateUserValidation.validate(req.body);
-      console.log(req.body);
 
       if (error) {
         logger.error(error.details[0].message);
@@ -204,7 +218,7 @@ module.exports = {
         );
       }
 
-      const findUser = await User.findOne({ _id: new ObjectId(id) });
+      const findUser = await userModel.findOne({ _id: new ObjectId(id) });
 
       if (!findUser) {
         logger.error(`User ${message.NOT_FOUND}`);
@@ -218,7 +232,7 @@ module.exports = {
         );
       }
 
-      const image = req.file ? path.join(req.file.filename) : findUser.image;
+      const image = req.file ? req.file.filename : findUser.image;
       const updateUser = {
         firstName,
         lastName,
@@ -228,12 +242,141 @@ module.exports = {
         phone,
         image,
       };
-      await findUser.updateOne(
+      await userModel.updateOne(
         { _id: findUser._id },
         { $set: { ...updateUser } }
       );
 
-      logger.info(`User ${message.UPDATED}`);
+      logger.info(`Profile ${message.UPDATED}`);
+      return res.json(
+        HandleResponse(response.SUCCESS, StatusCodes.ACCEPTED, undefined)
+      );
+    } catch (error) {
+      logger.error(error.message || error);
+      return res.json(
+        HandleResponse(
+          response.ERROR,
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          error.message || error,
+          undefined
+        )
+      );
+    }
+  },
+
+  verifyEmail: async (req, res) => {
+    try {
+      const { email } = req.body;
+      const { error } = verifyEmailValidation.validate(req.body);
+
+      if (error) {
+        logger.error(error.details[0].message);
+        return res.json(
+          HandleResponse(
+            response.ERROR,
+            StatusCodes.BAD_REQUEST,
+            error.details[0].message,
+            undefined
+          )
+        );
+      }
+
+      const findUser = await userModel.findOne({ email });
+
+      if (!findUser) {
+        logger.error(`User ${message.NOT_FOUND}`);
+        return res.json(
+          HandleResponse(
+            response.ERROR,
+            StatusCodes.NOT_FOUND,
+            `User ${message.NOT_FOUND}`,
+            undefined
+          )
+        );
+      }
+
+      const otp = generateOTP();
+      const expire_at = moment().add(5, 'minutes').format();
+      const otpData = new otpModel({
+        email,
+        otp,
+        expire_at,
+      });
+
+      await otpData.save();
+      await sendMail(email, otp);
+
+      logger.info(message.OTP_SENT);
+      return res.json(
+        HandleResponse(response.SUCCESS, StatusCodes.OK, undefined, {
+          otp,
+        })
+      );
+    } catch (error) {
+      logger.error(error.message || error);
+      return res.json(
+        HandleResponse(
+          response.ERROR,
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          error.message || error,
+          undefined
+        )
+      );
+    }
+  },
+
+  forgotPassword: async (req, res) => {
+    try {
+      const { email, newPassword, confirmPassword, otp } = req.body;
+      const { error } = forgotPasswordValidation.validate(req.body);
+      const findOTP = await otpModel.findOne({ otp });
+
+      if (error) {
+        logger.error(error.details[0].message);
+        return res.json(
+          HandleResponse(
+            response.ERROR,
+            StatusCodes.BAD_REQUEST,
+            error.details[0].message,
+            undefined
+          )
+        );
+      }
+
+      if (!findOTP) {
+        logger.error(`OTP ${message.NOT_FOUND}`);
+        return res.json(
+          HandleResponse(
+            response.ERROR,
+            StatusCodes.NOT_FOUND,
+            `OTP ${message.NOT_FOUND}`,
+            undefined
+          )
+        );
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      const findUser = await userModel.findOne({ email });
+
+      if (!findUser) {
+        logger.error(`User ${message.NOT_FOUND}`);
+        return res.json(
+          HandleResponse(
+            response.ERROR,
+            StatusCodes.NOT_FOUND,
+            `User ${message.NOT_FOUND}`,
+            undefined
+          )
+        );
+      }
+
+      await otpModel.deleteOne({ otp });
+      await userModel.updateOne(
+        { email: findUser.email },
+        { $set: { password: hashedPassword } }
+      );
+
+      logger.info(`Password ${message.UPDATED}`);
       return res.json(
         HandleResponse(response.SUCCESS, StatusCodes.ACCEPTED, undefined)
       );

@@ -103,8 +103,45 @@ const updateUserValidation = Joi.object({
   image: Joi.string().optional(),
 });
 
+const verifyEmailValidation = Joi.object({
+  email: Joi.string().email().required().messages({
+    'string.base': 'Email must be a string.',
+    'string.empty': 'Email cannot be empty.',
+    'any.required': 'Email is a required field.',
+    'string.email': 'Email must be a valid email address.',
+  }),
+});
+
+const forgotPasswordValidation = Joi.object({
+  email: Joi.string().email().required().messages({
+    'string.base': 'Email must be a string.',
+    'string.empty': 'Email cannot be empty.',
+    'any.required': 'Email is a required field.',
+    'string.email': 'Email must be a valid email address.',
+  }),
+  newPassword: Joi.string()
+    .pattern(new RegExp('^[A-Z][a-zA-Z0-9!@#$%&*.]{7,}$'))
+    .required()
+    .messages({
+      'string.pattern.base':
+        'Password must start with a capital latter and must be at least 8 characters long.',
+      'string.empty': 'Password cannot be empty.',
+      'any.required': 'Password must be required.',
+    }),
+  confirmPassword: Joi.string()
+    .valid(Joi.ref('newPassword'))
+    .required()
+    .messages({
+      'any.only': 'New password and confirm password must be same.',
+      'string.empty': 'Confirm password cannot be empty.',
+      'any.required': 'Confirm password must be required.',
+    }),
+});
+
 module.exports = {
   registerValidation,
   loginValidation,
   updateUserValidation,
+  verifyEmailValidation,
+  forgotPasswordValidation,
 };
