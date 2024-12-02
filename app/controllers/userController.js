@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const path = require('path');
-const User = require('../models/userModel');
+const userModel = require('../models/userModel');
 const HandleResponse = require('../services/errorHandler');
 const message = require('../utils/message');
 const { StatusCodes } = require('http-status-codes');
@@ -20,9 +20,7 @@ module.exports = {
     try {
       const { firstName, lastName, hobby, gender, email, password, phone } =
         req.body;
-      const image = req.file ? path.join(req.file.filename) : null;
-      console.log(req.file);
-
+      const image = req.file ? req.file.filename : null;
       const { error } = registerValidation.validate(req.body);
 
       if (error) {
@@ -37,7 +35,7 @@ module.exports = {
         );
       }
 
-      const existingUser = await User.findOne({ email });
+      const existingUser = await userModel.findOne({ email });
 
       if (existingUser) {
         logger.error(`User ${message.ALREADY_EXIST}`);
@@ -54,7 +52,7 @@ module.exports = {
       const saltRound = 10;
       const hashedPassword = await bcrypt.hash(password, saltRound);
 
-      const newUser = new User({
+      const newUser = new userModel({
         firstName,
         lastName,
         hobby,
@@ -65,7 +63,7 @@ module.exports = {
         image,
       });
 
-      const user = await newUser.save();
+      const userCreate = await newUser.save();
 
       logger.info(message.USER_REGISTERED);
       return res.json(
@@ -73,7 +71,7 @@ module.exports = {
           response.SUCCESS,
           StatusCodes.CREATED,
           message.USER_REGISTERED,
-          { _id: user.id },
+          { id: userCreate.id },
           undefined
         )
       );
@@ -90,23 +88,28 @@ module.exports = {
     }
   },
 
-  viewUser: async (req, res) => {
+  viewProfile: async (req, res) => {
     try {
       const { id } = req.params;
-      const findUser = await User.findOne({ _id: new ObjectId(id) }).select(
-        '-password'
-      );
+
+      const findUser = await userModel
+        .findOne({ _id: new ObjectId(id) })
+        .select('-password');
 
       if (!findUser) {
         logger.error(`User ${message.NOT_FOUND}`);
         return res.json(
-          HandleResponse(response.ERROR, StatusCodes.NOT_FOUND, undefined)
+          HandleResponse(
+            response.ERROR,
+            StatusCodes.NOT_FOUND,
+            `User ${message.NOT_FOUND}`
+          )
         );
       }
 
-      logger.info(`User ${message.RETRIEVED_SUCCESS}`);
+      logger.info(`User profile ${message.GET_SUCCESS}`);
       return res.json(
-        HandleResponse(response.SUCCESS, StatusCodes.OK, findUser)
+        HandleResponse(response.SUCCESS, StatusCodes.OK, undefined, findUser)
       );
     } catch (error) {
       logger.error(error.message || error);

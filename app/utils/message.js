@@ -7,6 +7,7 @@ module.exports = {
   INVALID_PASSWORD: 'Invalid password.',
 
   // common message
+  GET_SUCCESS: 'getting successfully.',
   RETRIEVED_SUCCESS: 'retrieved successfully.',
   NOT_FOUND: 'not found.',
   UPDATED: 'updated successfully.',
