@@ -11,6 +11,7 @@ const {
   loginValidation,
 } = require('../validations/userValidation');
 const { ObjectId } = require('mongodb');
+require('dotenv').config();
 
 module.exports = {
   registerUser: async (req, res) => {

@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
-
+require('dotenv').config();
 const connectDB = async () => {
   try {
-    await mongoose.connect('mongodb://localhost:27017/boiler_plate');
+    await mongoose.connect(process.env.DB_CONNECTION);
     console.log('Database connected successfully.');
   } catch (error) {
     console.log('Database error ', error);
