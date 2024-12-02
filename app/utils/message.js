@@ -1,6 +1,4 @@
 module.exports = {
-  SUCCESS: 'success',
-
   // User
   ALREADY_EXIST: 'already exist.',
   USER_REGISTERED: 'User registered successfully.',
@@ -14,4 +12,5 @@ module.exports = {
   RETRIEVED_SUCCESS: 'retrieved successfully.',
   NOT_FOUND: 'not found.',
   UPDATED: 'updated successfully.',
+  METHOD_NOT_ALLOWED: 'Method not allowed.',
 };
