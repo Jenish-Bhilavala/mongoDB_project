@@ -100,7 +100,7 @@ module.exports = {
         );
       }
 
-      logger.info(`User ${message.GET_SUCCESS}`);
+      logger.info(`User profile ${message.GET_SUCCESS}`);
       return res.json(
         HandleResponse(response.SUCCESS, StatusCodes.OK, undefined, findUser)
       );
