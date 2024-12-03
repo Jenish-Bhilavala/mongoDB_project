@@ -11,8 +11,7 @@ module.exports = {
   GET_SUCCESS: 'getting successfully.',
   RETRIEVED_SUCCESS: 'retrieved successfully.',
   NOT_FOUND: 'not found.',
-  UPDATED: 'updated successfully.',
-  ADDED: 'added successfully.',
+  UPDATED_SUCCESS: 'updated successfully.',
   METHOD_NOT_ALLOWED: 'Method not allowed.',
   DELETED: 'deleted successfully.',
 };

@@ -16,7 +16,6 @@ const {
   verifyEmailValidation,
   forgotPasswordValidation,
 } = require('../validations/userValidation');
-const { ObjectId } = require('mongodb');
 require('dotenv').config();
 
 module.exports = {
@@ -96,9 +95,7 @@ module.exports = {
     try {
       const { id } = req.params;
 
-      const findUser = await userModel
-        .findOne({ _id: new ObjectId(id) })
-        .select('-password');
+      const findUser = await userModel.findById(id).select('-password');
 
       if (!findUser) {
         logger.error(`User ${message.NOT_FOUND}`);
@@ -185,7 +182,12 @@ module.exports = {
 
       logger.info(message.LOGIN_SUCCESS);
       return res.json(
-        HandleResponse(response.SUCCESS, StatusCodes.OK, undefined, { token })
+        HandleResponse(
+          response.SUCCESS,
+          StatusCodes.OK,
+          message.LOGIN_SUCCESS,
+          { token }
+        )
       );
     } catch (error) {
       logger.error(error.message || error);
@@ -203,7 +205,6 @@ module.exports = {
   updateProfile: async (req, res) => {
     try {
       const { id } = req.params;
-      const { firstName, lastName, hobby, gender, email, phone } = req.body;
       const { error } = updateUserValidation.validate(req.body);
 
       if (error) {
@@ -218,7 +219,7 @@ module.exports = {
         );
       }
 
-      const findUser = await userModel.findOne({ _id: new ObjectId(id) });
+      const findUser = await userModel.findById(id);
 
       if (!findUser) {
         logger.error(`User ${message.NOT_FOUND}`);
@@ -232,24 +233,25 @@ module.exports = {
         );
       }
 
-      const image = req.file ? req.file.filename : findUser.image;
-      const updateUser = {
-        firstName,
-        lastName,
-        hobby,
-        gender,
-        email,
-        phone,
-        image,
-      };
+      const imageValue = req.file ? req.file.filename : findUser.image;
+      const updateUser = req.body;
       await userModel.updateOne(
         { _id: findUser._id },
-        { $set: { ...updateUser } }
+        {
+          $set: {
+            ...updateUser,
+            image: imageValue,
+          },
+        }
       );
 
-      logger.info(`Profile ${message.UPDATED}`);
+      logger.info(`Profile ${message.UPDATED_SUCCESS}`);
       return res.json(
-        HandleResponse(response.SUCCESS, StatusCodes.ACCEPTED, undefined)
+        HandleResponse(
+          response.SUCCESS,
+          StatusCodes.ACCEPTED,
+          `Profile ${message.UPDATED_SUCCESS}`
+        )
       );
     } catch (error) {
       logger.error(error.message || error);
@@ -308,7 +310,7 @@ module.exports = {
 
       logger.info(message.OTP_SENT);
       return res.json(
-        HandleResponse(response.SUCCESS, StatusCodes.OK, undefined, {
+        HandleResponse(response.SUCCESS, StatusCodes.OK, message.OTP_SENT, {
           otp,
         })
       );
@@ -378,7 +380,11 @@ module.exports = {
 
       logger.info(`Password ${message.UPDATED}`);
       return res.json(
-        HandleResponse(response.SUCCESS, StatusCodes.ACCEPTED, undefined)
+        HandleResponse(
+          response.SUCCESS,
+          StatusCodes.ACCEPTED,
+          `Profile ${message.UPDATED_SUCCESS}`
+        )
       );
     } catch (error) {
       logger.error(error.message || error);
