@@ -1,16 +1,35 @@
 const mongoose = require('mongoose');
 
-const portfolioSchema = new mongoose.Schema({
-  project_name: {
-    type: String,
-    maxLength: 50,
-    required: true,
+const portfolioSchema = new mongoose.Schema(
+  {
+    project_name: {
+      type: String,
+      maxLength: 50,
+      required: true,
+    },
+    category_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'category',
+      required: true,
+    },
+    description: {
+      type: String,
+      maxLength: 255,
+      required: true,
+    },
+    image: {
+      type: Array,
+    },
+    isDelete: {
+      type: Boolean,
+      default: false,
+    },
   },
-  category_id: {
-    type: mongoose.Types.ObjectId(),
-    ref: 'category',
-  },
-});
+  {
+    timestamps: true,
+    collection: 'portfolio',
+  }
+);
 
 const portfolioModel = mongoose.model('portfolio', portfolioSchema);
 module.exports = portfolioModel;
