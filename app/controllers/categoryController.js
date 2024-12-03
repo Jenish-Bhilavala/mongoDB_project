@@ -148,9 +148,12 @@ module.exports = {
 
       logger.info(`Category ${message.RETRIEVED_SUCCESS}`);
       return res.json(
-        HandleResponse(response.SUCCESS, StatusCodes.OK, undefined, {
-          findCategory,
-        })
+        HandleResponse(
+          response.SUCCESS,
+          StatusCodes.OK,
+          undefined,
+          findCategory
+        )
       );
     } catch (error) {
       logger.error(error.message || error);
