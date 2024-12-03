@@ -49,7 +49,6 @@ module.exports = {
           response.SUCCESS,
           StatusCodes.CREATED,
           `Category ${message.ADDED_SUCCESS}`,
-          undefined,
           {
             id: addCategory._id,
           }
