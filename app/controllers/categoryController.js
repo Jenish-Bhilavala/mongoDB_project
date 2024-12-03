@@ -45,9 +45,15 @@ module.exports = {
 
       logger.info(`Category ${message.ADDED_SUCCESS}`);
       return res.json(
-        HandleResponse(response.SUCCESS, StatusCodes.CREATED, undefined, {
-          id: addCategory._id,
-        })
+        HandleResponse(
+          response.SUCCESS,
+          StatusCodes.CREATED,
+          `Category ${message.ADDED_SUCCESS}`,
+          undefined,
+          {
+            id: addCategory._id,
+          }
+        )
       );
     } catch (error) {
       logger.error(error.message || error);
@@ -238,7 +244,7 @@ module.exports = {
       return res.json(
         HandleResponse(
           response.SUCCESS,
-          StatusCodes.ACCEPTED,
+          StatusCodes.OK,
           `Category ${message.DELETED_SUCCESS}`,
           undefined
         )
