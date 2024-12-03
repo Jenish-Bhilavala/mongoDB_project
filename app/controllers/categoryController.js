@@ -43,7 +43,7 @@ module.exports = {
       });
       const addCategory = await newCategory.save();
 
-      logger.info(`Category ${message.ADDED}`);
+      logger.info(`Category ${message.ADDED_SUCCESS}`);
       return res.json(
         HandleResponse(response.SUCCESS, StatusCodes.CREATED, undefined, {
           id: addCategory._id,
@@ -193,9 +193,14 @@ module.exports = {
 
       await categoryModel.updateOne(req.body);
 
-      logger.info(`Category ${message.UPDATED}`);
+      logger.info(`Category ${message.UPDATED_SUCCESS}`);
       return res.json(
-        HandleResponse(response.SUCCESS, StatusCodes.ACCEPTED, undefined)
+        HandleResponse(
+          response.SUCCESS,
+          StatusCodes.ACCEPTED,
+          `Category ${message.UPDATED_SUCCESS}`,
+          undefined
+        )
       );
     } catch (error) {
       logger.error(error.message || error);
@@ -229,9 +234,14 @@ module.exports = {
 
       await categoryModel.deleteOne(findCategory);
 
-      logger.info(`Category ${message.DELETED}`);
+      logger.info(`Category ${message.DELETED_SUCCESS}`);
       return res.json(
-        HandleResponse(response.SUCCESS, StatusCodes.ACCEPTED, undefined)
+        HandleResponse(
+          response.SUCCESS,
+          StatusCodes.ACCEPTED,
+          `Category ${message.DELETED_SUCCESS}`,
+          undefined
+        )
       );
     } catch (error) {
       logger.error(error.message || error);

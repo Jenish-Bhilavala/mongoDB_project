@@ -13,5 +13,6 @@ module.exports = {
   NOT_FOUND: 'not found.',
   UPDATED_SUCCESS: 'updated successfully.',
   METHOD_NOT_ALLOWED: 'Method not allowed.',
-  DELETED: 'deleted successfully.',
+  DELETED_SUCCESS: 'deleted successfully.',
+  ADDED_SUCCESS: 'added successfully.',
 };
