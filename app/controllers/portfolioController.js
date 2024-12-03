@@ -65,9 +65,9 @@ module.exports = {
     try {
       const { id } = req.params;
       let findPortfolio = await portfolioModel
-        .findOne({ _id: id, isDelete: false })
+        .findOne({ _id: id, is_delete: false })
         .populate('category_id', 'category_name')
-        .select('-isDelete');
+        .select('-is_delete');
 
       if (!findPortfolio) {
         logger.error(`Portfolio ${message.NOT_FOUND}`);
@@ -103,12 +103,16 @@ module.exports = {
     }
   },
 
-  listPortfolio: async (req, res) => {
+  listOfPortfolio: async (req, res) => {
     try {
       const { page, limit, sortBy, orderBy, searchTerm } = req.body;
       const pageNumber = parseInt(page, 10) || 1;
       const limitNumber = parseInt(limit, 10) || 10;
       const pipeline = [];
+
+      pipeline.push({
+        $match: { is_delete: false },
+      });
 
       if (searchTerm) {
         pipeline.push({
@@ -131,7 +135,7 @@ module.exports = {
 
       const findPortfolio = await portfolioModel.aggregate(pipeline);
 
-      if (!findPortfolio) {
+      if (findPortfolio.length === 0) {
         logger.error(`Portfolio ${message.NOT_FOUND}`);
         return res.json(
           HandleResponse(
@@ -168,7 +172,6 @@ module.exports = {
   updatePortfolio: async (req, res) => {
     try {
       const { id } = req.params;
-      const { project_name, description, category_id } = req.body;
       const { error } = portfolioUpdateValidation.validate(req.body);
 
       if (error) {
@@ -184,7 +187,7 @@ module.exports = {
       }
       const findPortfolio = await portfolioModel.findOne({
         _id: id,
-        isDelete: false,
+        is_delete: false,
       });
 
       if (!findPortfolio) {
@@ -203,14 +206,10 @@ module.exports = {
         ? req.files.map((item) => item.filename)
         : null;
       const image = imageArray.length > 0 ? imageArray : findPortfolio.image;
-      const updatePortfolio = {
-        project_name,
-        category_id,
-        description,
-        image,
-      };
+      const updatePortfolio = req.body;
 
-      await findPortfolio.updateOne(updatePortfolio);
+      await findPortfolio.updateOne({ ...updatePortfolio, image });
+
       logger.info(`Portfolio ${message.UPDATED_SUCCESS}`);
       return res.json(
         HandleResponse(
@@ -237,7 +236,7 @@ module.exports = {
     try {
       const { id } = req.params;
       const findPortfolio = await portfolioModel
-        .findOne({ _id: id, isDelete: false })
+        .findOne({ _id: id, is_delete: false })
         .populate('category_id', 'category_name');
 
       if (!findPortfolio) {
@@ -252,7 +251,7 @@ module.exports = {
         );
       }
 
-      await findPortfolio.updateOne({ isDelete: true });
+      await findPortfolio.updateOne({ is_delete: true });
 
       logger.info(`Portfolio ${message.DELETED_SUCCESS}`);
       return res.json(

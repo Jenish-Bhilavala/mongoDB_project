@@ -20,7 +20,7 @@ const portfolioSchema = new mongoose.Schema(
     image: {
       type: Array,
     },
-    isDelete: {
+    is_delete: {
       type: Boolean,
       default: false,
     },

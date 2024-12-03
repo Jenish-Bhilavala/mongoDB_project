@@ -6,7 +6,7 @@ const { globalRoute } = require('../../utils/globalRoute');
 
 router.post('/', upload.array('image'), portfolioController.addPortfolio);
 router.get('/view-portfolio/:id', portfolioController.viewPortfolio);
-router.post('/list-portfolio', portfolioController.listPortfolio);
+router.post('/list-portfolio', portfolioController.listOfPortfolio);
 router.put(
   '/update-portfolio/:id',
   upload.array('image'),
