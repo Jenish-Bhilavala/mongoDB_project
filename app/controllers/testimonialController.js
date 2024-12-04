@@ -115,7 +115,7 @@ module.exports = {
 
       pipeline.push({
         $project: {
-          is_delete: 0,
+          is_delete: false,
         },
       });
 
@@ -213,7 +213,7 @@ module.exports = {
       logger.info(`Testimonial ${message.UPDATED_SUCCESS}`);
       return res.json(
         HandleResponse(
-          response.ERROR,
+          response.SUCCESS,
           StatusCodes.ACCEPTED,
           `Testimonial ${message.UPDATED_SUCCESS}`,
           undefined
